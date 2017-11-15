@@ -150,39 +150,6 @@ namespace MvvmCross.Mac.Views.Presenters
                 });
         }
 
-        public override void ChangePresentation(MvxPresentationHint hint)
-        {
-            if (HandlePresentationChange(hint)) return;
-
-            if (hint is MvxClosePresentationHint presentationHint)
-            {
-                Close(presentationHint.ViewModelToClose);
-                return;
-            }
-
-            MvxTrace.Warning("Hint ignored {0}", hint.GetType().Name);
-        }
-
-        public override void Show(MvxViewModelRequest request)
-        {
-            var attribute = GetPresentationAttribute(request.ViewModelType);
-            attribute.ViewModelType = request.ViewModelType;
-            var attributeType = attribute.GetType();
-
-            if (AttributeTypesToActionsDictionary.TryGetValue(
-                attributeType,
-                out MvxPresentationAttributeAction attributeAction))
-            {
-                if (attributeAction.ShowAction == null)
-                    throw new NullReferenceException($"attributeAction.ShowAction is null for attribute: {attributeType.Name}");
-
-                attributeAction.ShowAction.Invoke(attribute.ViewType, attribute, request);
-                return;
-            }
-
-            throw new KeyNotFoundException($"The type {attributeType.Name} is not configured in the presenter dictionary");
-        }
-
         protected virtual void ShowWindowViewController(
             NSViewController viewController,
             MvxWindowPresentationAttribute attribute,

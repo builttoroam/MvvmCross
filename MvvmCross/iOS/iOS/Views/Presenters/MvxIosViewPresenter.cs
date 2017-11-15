@@ -45,7 +45,6 @@ namespace MvvmCross.iOS.Views.Presenters
         {
             if (viewType?.GetInterface(nameof(IMvxOverridePresentationAttribute)) != null)
             {
-
                 var viewInstance = this.CreateViewControllerFor(viewType, null) as UIViewController;
                 using (viewInstance)
                 {
@@ -151,39 +150,6 @@ namespace MvvmCross.iOS.Views.Presenters
                     },
                     CloseAction = (viewModel, attribute) => CloseDetailSplitViewController(viewModel, (MvxDetailSplitViewPresentationAttribute)attribute)
                 });
-        }
-
-        public override void ChangePresentation(MvxPresentationHint hint)
-        {
-            if (HandlePresentationChange(hint)) return;
-
-            if (hint is MvxClosePresentationHint presentationHint)
-            {
-                Close(presentationHint.ViewModelToClose);
-                return;
-            }
-
-            MvxTrace.Warning("Hint ignored {0}", hint.GetType().Name);
-        }
-
-        public override void Show(MvxViewModelRequest request)
-        {
-            var attribute = GetPresentationAttribute(request.ViewModelType);
-            attribute.ViewModelType = request.ViewModelType;
-            var attributeType = attribute.GetType();
-
-            if (AttributeTypesToActionsDictionary.TryGetValue(
-                attributeType,
-                out MvxPresentationAttributeAction attributeAction))
-            {
-                if (attributeAction.ShowAction == null)
-                    throw new NullReferenceException($"attributeAction.ShowAction is null for attribute: {attributeType.Name}");
-
-                attributeAction.ShowAction.Invoke(attribute.ViewType, attribute, request);
-                return;
-            }
-
-            throw new KeyNotFoundException($"The type {attributeType.Name} is not configured in the presenter dictionary");
         }
 
         #region Show implementations
@@ -360,25 +326,6 @@ namespace MvvmCross.iOS.Views.Presenters
         }
 
         #endregion
-
-        public override void Close(IMvxViewModel viewModel)
-        {
-            var attribute = GetPresentationAttribute(viewModel.GetType());
-            var attributeType = attribute.GetType();
-
-            if (AttributeTypesToActionsDictionary.TryGetValue(
-                attributeType,
-                out MvxPresentationAttributeAction attributeAction))
-            {
-                if (attributeAction.CloseAction == null)
-                    throw new NullReferenceException($"attributeAction.CloseAction is null for attribute: {attributeType.Name}");
-
-                attributeAction.CloseAction.Invoke(viewModel, attribute);
-                return;
-            }
-
-            throw new KeyNotFoundException($"The type {attributeType.Name} is not configured in the presenter dictionary");
-        }
 
         #region Close implementations
 
