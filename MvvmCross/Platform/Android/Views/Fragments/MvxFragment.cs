@@ -6,6 +6,7 @@ using System;
 using Android.OS;
 using Android.Runtime;
 using MvvmCross.Binding.BindingContext;
+using MvvmCross.Platform.Android.Core;
 using MvvmCross.Platform.Android.Views.Fragments.EventSource;
 using MvvmCross.ViewModels;
 
@@ -21,7 +22,7 @@ namespace MvvmCross.Platform.Android.Views.Fragments
         /// </summary>
         /// <param name="bundle">Usually this would be MvxViewModelRequest serialized</param>
         /// <returns>Returns an instance of a MvxFragment</returns>
-        public static MvxFragment NewInstance(Bundle bundle)
+        public static MvxFragment NewInstance(Bundle bundle, Func<global::Android.Content.Context, MvxAndroidSetup> setupCreator)
         {
             // Setting Arguments needs to happen before Fragment is attached
             // to Activity. Arguments are persisted when Fragment is recreated!

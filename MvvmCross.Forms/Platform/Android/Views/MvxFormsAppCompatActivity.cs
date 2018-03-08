@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Reflection;
+using System.Threading.Tasks;
 using Android.Content;
 using Android.OS;
 using Android.Util;
@@ -20,7 +21,7 @@ using MvvmCross.ViewModels;
 
 namespace MvvmCross.Forms.Platform.Android.Views
 {
-    public abstract class MvxFormsAppCompatActivity : MvxEventSourceFormsAppCompatActivity, IMvxAndroidView
+    public abstract class MvxFormsAppCompatActivity : MvxEventSourceFormsAppCompatActivity, IMvxAndroidView, IMvxSetupCreator
     {
         private View _view;
 
@@ -63,6 +64,8 @@ namespace MvvmCross.Forms.Platform.Android.Views
             }
         }
 
+        public abstract MvxAndroidSetup CreateSetup(Context applicationContext);
+
         public void MvxInternalStartActivityForResult(Intent intent, int requestCode)
         {
             StartActivityForResult(intent, requestCode);
@@ -95,7 +98,7 @@ namespace MvvmCross.Forms.Platform.Android.Views
         protected override void OnCreate(Bundle bundle)
         {
             // Required for proper Push notifications handling      
-            var setupSingleton = MvxAndroidSetupSingleton.EnsureSingletonAvailable(ApplicationContext);
+            var setupSingleton = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, ApplicationContext);
             setupSingleton.EnsureInitialized();
 
             base.OnCreate(bundle);
@@ -103,11 +106,12 @@ namespace MvvmCross.Forms.Platform.Android.Views
             InitializeForms(bundle);
         }
 
-        public virtual void InitializeForms(Bundle bundle)
+        public async virtual void InitializeForms(Bundle bundle)
         {
             if (FormsApplication.MainPage != null)
             {
-                global::Xamarin.Forms.Forms.Init(this, bundle, GetResourceAssembly());
+                global::Xamarin.Forms.Forms.Init(this, bundle);//, GetResourceAssembly());
+                await Task.Delay(1000);
                 LoadApplication(FormsApplication);
             }
         }
@@ -154,7 +158,7 @@ namespace MvvmCross.Forms.Platform.Android.Views
         }
     }
 
-    public class MvxFormsAppCompatActivity<TViewModel>
+    public abstract class MvxFormsAppCompatActivity<TViewModel>
         : MvxFormsAppCompatActivity
     , IMvxAndroidView<TViewModel> where TViewModel : class, IMvxViewModel
     {

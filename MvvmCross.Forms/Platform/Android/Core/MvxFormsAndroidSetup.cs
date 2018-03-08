@@ -7,6 +7,7 @@ using MvvmCross.Binding;
 using MvvmCross.Binding.Bindings.Target.Construction;
 using MvvmCross.Localization;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using MvvmCross.Forms.Core;
 using MvvmCross.Forms.Platform.Android.Bindings;
@@ -111,5 +112,23 @@ namespace MvvmCross.Forms.Platform.Android.Core
         {
             return new MvxPostfixAwareViewToViewModelNameMapping("View", "Activity", "Fragment", "Page");
         }
-    }    
+    }
+
+    public class MvxFormsAndroidSetup<TApplication, TFormsApplication> : MvxFormsAndroidSetup
+       where TFormsApplication : MvxFormsApplication, new()
+       where TApplication : IMvxApplication, new()
+    {
+        public MvxFormsAndroidSetup(Context applicationContext) : base(applicationContext)
+        {
+        }
+
+        protected override IEnumerable<Assembly> GetViewAssemblies()
+        {
+            return new List<Assembly>(base.GetViewAssemblies().Union(new[] { typeof(TFormsApplication).GetTypeInfo().Assembly }));
+        }
+
+        protected override MvxFormsApplication CreateFormsApplication() => new TFormsApplication();
+
+        protected override IMvxApplication CreateApp() => new TApplication();
+    }
 }

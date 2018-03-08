@@ -28,7 +28,9 @@ namespace MvvmCross.Platform.Android.Views.Fragments
 
         protected override void HandleCreateCalled(object sender, MvxValueEventArgs<Bundle> bundleArgs)
         {
-            FragmentView.EnsureSetupInitialized();
+            var creator = Fragment as IMvxSetupCreator;
+
+            FragmentView.EnsureSetupInitialized(creator.CreateSetup);
 
             // Create is called after Fragment is attached to Activity
             // it's safe to assume that Fragment has activity

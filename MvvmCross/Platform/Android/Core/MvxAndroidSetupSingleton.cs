@@ -102,7 +102,7 @@ namespace MvvmCross.Platform.Android.Core
             }
         }
 
-        public static MvxAndroidSetupSingleton EnsureSingletonAvailable(Context applicationContext)
+        public static MvxAndroidSetupSingleton EnsureSingletonAvailable(Func<Context,MvxAndroidSetup> setupCreator, Context applicationContext)
         {
             if (Instance != null)
                 return Instance;
@@ -112,31 +112,33 @@ namespace MvvmCross.Platform.Android.Core
                 if (Instance != null)
                     return Instance;
 
-                var instance = new MvxAndroidSetupSingleton();
+                var instance = new MvxAndroidSetupSingleton(setupCreator);
                 instance.CreateSetup(applicationContext);
                 return Instance;
             }
         }
 
-        protected MvxAndroidSetupSingleton()
+        private Func<Context, MvxAndroidSetup> SetupCreator { get; set; }
+        protected MvxAndroidSetupSingleton(Func<Context, MvxAndroidSetup> setupCreator)
         {
+            SetupCreator = setupCreator;
         }
 
         protected virtual void CreateSetup(Context applicationContext)
         {
-            var setupType = FindSetupType();
-            if (setupType == null)
-            {
-                throw new MvxException("Could not find a Setup class for application");
-            }
+            //var setupType = FindSetupType();
+            //if (setupType == null)
+            //{
+            //    throw new MvxException("Could not find a Setup class for application");
+            //}
 
             try
             {
-                _setup = (MvxAndroidSetup)Activator.CreateInstance(setupType, applicationContext);
+                _setup = SetupCreator(applicationContext);//  (MvxAndroidSetup)Activator.CreateInstance(setupType, applicationContext);
             }
             catch (Exception exception)
             {
-                throw exception.MvxWrap("Failed to create instance of {0}", setupType.FullName);
+                throw exception.MvxWrap("Failed to create setup instance");
             }
         }
 

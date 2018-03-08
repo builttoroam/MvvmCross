@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MS-PL license.
 // See the LICENSE file in the project root for more information.
 
+using System.Runtime.Remoting.Contexts;
 using Android.OS;
 using Android.Runtime;
 using Android.Views;
@@ -12,7 +13,7 @@ namespace MvvmCross.Platform.Android.Views
 {
     [Register("mvvmcross.droid.views.MvxSplashScreenActivity")]
     public abstract class MvxSplashScreenActivity
-        : MvxActivity, IMvxAndroidSplashScreenActivity
+        : MvxActivity, IMvxAndroidSplashScreenActivity, IMvxSetupCreator
     {
         private const int NoContent = 0;
 
@@ -34,11 +35,13 @@ namespace MvvmCross.Platform.Android.Views
             RequestWindowFeature(WindowFeatures.NoTitle);
         }
 
+        public abstract MvxAndroidSetup CreateSetup(global::Android.Content.Context applicationContext);
+
         protected override void OnCreate(Bundle bundle)
         {
             RequestWindowFeatures();
 
-            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(ApplicationContext);
+            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, ApplicationContext);
             setup.InitializeFromSplashScreen(this);
 
             base.OnCreate(bundle);
@@ -58,14 +61,14 @@ namespace MvvmCross.Platform.Android.Views
         {
             base.OnResume();
             _isResumed = true;
-            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(ApplicationContext);
+            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, ApplicationContext);
             setup.InitializeFromSplashScreen(this);
         }
 
         protected override void OnPause()
         {
             _isResumed = false;
-            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(ApplicationContext);
+            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, ApplicationContext);
             setup.RemoveSplashScreen(this);
             base.OnPause();
         }

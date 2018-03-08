@@ -30,6 +30,8 @@ namespace MvvmCross.Droid.Support.V7.AppCompat
             _resourceId = resourceId;
         }
 
+        protected abstract MvxAndroidSetup CreateSetup(global::Android.Content.Context applicationContext);
+
         protected virtual void RequestWindowFeatures()
         {
             RequestWindowFeature(WindowFeatures.NoTitle);
@@ -39,7 +41,7 @@ namespace MvvmCross.Droid.Support.V7.AppCompat
         {
             RequestWindowFeatures();
 
-            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(ApplicationContext);
+            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, ApplicationContext);
             setup.InitializeFromSplashScreen(this);
 
             base.OnCreate(bundle);
@@ -59,14 +61,14 @@ namespace MvvmCross.Droid.Support.V7.AppCompat
         {
             base.OnResume();
             _isResumed = true;
-            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(ApplicationContext);
+            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, ApplicationContext);
             setup.InitializeFromSplashScreen(this);
         }
 
         protected override void OnPause()
         {
             _isResumed = false;
-            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(ApplicationContext);
+            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, ApplicationContext);
             setup.RemoveSplashScreen(this);
             base.OnPause();
         }

@@ -150,10 +150,6 @@
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\MvvmCross.Forms\MvvmCross.Forms.csproj">
-      <Project>{013bb2b2-8204-43bd-aa7b-e494007f0b94}</Project>
-      <Name>MvvmCross.Forms</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\..\MvvmCross.Plugins\JsonLocalization\MvvmCross.Plugin.JsonLocalization.csproj">
       <Project>{c783ef46-1822-4baf-8eca-e820fff26633}</Project>
       <Name>MvvmCross.Plugin.JsonLocalization</Name>

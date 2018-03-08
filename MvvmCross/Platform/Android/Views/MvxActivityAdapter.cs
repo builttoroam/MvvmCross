@@ -73,7 +73,9 @@ namespace MvvmCross.Platform.Android.Views
 
         protected override void EventSourceOnCreateCalled(object sender, MvxValueEventArgs<Bundle> eventArgs)
         {
-            AndroidView.OnViewCreate(eventArgs.Value);
+            var setupCreator = Activity as IMvxSetupCreator;
+
+            AndroidView.OnViewCreate(eventArgs.Value,setupCreator.CreateSetup);
         }
 
         protected override void EventSourceOnSaveInstanceStateCalled(object sender, MvxValueEventArgs<Bundle> bundleArgs)

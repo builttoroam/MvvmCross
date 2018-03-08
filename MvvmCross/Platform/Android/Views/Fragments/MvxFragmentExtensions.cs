@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MS-PL license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using Android.App;
 using Android.Views;
 using MvvmCross.Exceptions;
@@ -94,13 +95,13 @@ namespace MvvmCross.Platform.Android.Views.Fragments
             }
         }
 
-        public static void EnsureSetupInitialized(this IMvxFragmentView fragmentView)
+        public static void EnsureSetupInitialized(this IMvxFragmentView fragmentView, Func<global::Android.Content.Context, MvxAndroidSetup> setupCreator)
         {
             var fragment = fragmentView.ToFragment();
             if (fragment == null)
                 throw new MvxException($"{nameof(EnsureSetupInitialized)} called on an {nameof(IMvxFragmentView)} which is not an Android Fragment: {fragmentView}");
 
-            var setupSingleton = MvxAndroidSetupSingleton.EnsureSingletonAvailable(fragment.Activity.ApplicationContext);
+            var setupSingleton = MvxAndroidSetupSingleton.EnsureSingletonAvailable(setupCreator, fragment.Activity.ApplicationContext);
             setupSingleton.EnsureInitialized();
         }
 

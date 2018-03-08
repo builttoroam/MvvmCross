@@ -13,6 +13,8 @@ namespace MvvmCross.Platform.Android.Services
     [Register("mvvmcross.droid.services.MvxIntentService")]
     public abstract class MvxIntentService : IntentService
     {
+        protected abstract MvxAndroidSetup CreateSetup(global::Android.Content.Context applicationContext);
+
         protected MvxIntentService(IntPtr javaReference, JniHandleOwnership transfer) : base(javaReference, transfer)
         {
         }
@@ -23,7 +25,7 @@ namespace MvvmCross.Platform.Android.Services
 
         protected override void OnHandleIntent(Intent intent)
         {
-            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(ApplicationContext);
+            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, ApplicationContext);
             setup.EnsureInitialized();
         }
     }

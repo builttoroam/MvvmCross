@@ -12,6 +12,8 @@ namespace MvvmCross.Platform.Android.Services
     [Register("mvvmcross.droid.services.MvxBroadcastReceiver")]
     public abstract class MvxBroadcastReceiver : BroadcastReceiver
     {
+        protected abstract MvxAndroidSetup CreateSetup(global::Android.Content.Context applicationContext);
+
         protected MvxBroadcastReceiver(IntPtr javaReference, JniHandleOwnership transfer)
             : base(javaReference, transfer)
         {
@@ -23,7 +25,7 @@ namespace MvvmCross.Platform.Android.Services
 
         public override void OnReceive(Context context, Intent intent)
         {
-            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(context);
+            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, context);
             setup.EnsureInitialized();
         }
     }

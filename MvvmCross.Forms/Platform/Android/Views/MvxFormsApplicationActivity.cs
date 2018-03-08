@@ -21,6 +21,7 @@ namespace MvvmCross.Forms.Platform.Android.Views
     public abstract class MvxFormsApplicationActivity : MvxEventSourceFormsApplicationActivity, IMvxAndroidView
     {
         protected View _view;
+        public abstract MvxAndroidSetup CreateSetup(global::Android.Content.Context applicationContext);
 
         protected MvxFormsApplicationActivity()
         {
@@ -93,7 +94,7 @@ namespace MvvmCross.Forms.Platform.Android.Views
         protected override void OnCreate(Bundle bundle)
         {
             // Required for proper Push notifications handling      
-            var setupSingleton = MvxAndroidSetupSingleton.EnsureSingletonAvailable(ApplicationContext);
+            var setupSingleton = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, ApplicationContext);
             setupSingleton.EnsureInitialized();
 
             base.OnCreate(bundle);
@@ -146,7 +147,7 @@ namespace MvvmCross.Forms.Platform.Android.Views
         }
     }
 
-    public class MvxFormsApplicationActivity<TViewModel>
+    public abstract class MvxFormsApplicationActivity<TViewModel>
         : MvxFormsApplicationActivity
     , IMvxAndroidView<TViewModel> where TViewModel : class, IMvxViewModel
     {

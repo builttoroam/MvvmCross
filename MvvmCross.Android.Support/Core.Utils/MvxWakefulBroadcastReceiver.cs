@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MS-PL license.
 // See the LICENSE file in the project root for more information.
 
@@ -13,6 +13,8 @@ namespace MvvmCross.Droid.Support.V4
     [Register("mvvmcross.droid.support.v4.MvxBrowseSupportFragment")]
     public abstract class MvxWakefulBroadcastReceiver : WakefulBroadcastReceiver
     {
+        protected abstract MvxAndroidSetup CreateSetup(global::Android.Content.Context applicationContext);
+
         protected MvxWakefulBroadcastReceiver(IntPtr javaReference, JniHandleOwnership transfer)
             : base(javaReference, transfer)
         {
@@ -24,7 +26,7 @@ namespace MvvmCross.Droid.Support.V4
 
         public override void OnReceive(Context context, Intent intent)
         {
-            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(context);
+            var setup = MvxAndroidSetupSingleton.EnsureSingletonAvailable(CreateSetup, context);
             setup.EnsureInitialized();
         }
     }

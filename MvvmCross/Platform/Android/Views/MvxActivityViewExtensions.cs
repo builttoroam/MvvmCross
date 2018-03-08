@@ -33,9 +33,9 @@ namespace MvvmCross.Platform.Android.Views
             }
         }
 
-        public static void OnViewCreate(this IMvxAndroidView androidView, Bundle bundle)
+        public static void OnViewCreate(this IMvxAndroidView androidView, Bundle bundle, Func<global::Android.Content.Context, MvxAndroidSetup> setupCreator)
         {
-            androidView.EnsureSetupInitialized();
+            androidView.EnsureSetupInitialized(setupCreator);
             androidView.OnLifetimeEvent((listener, activity) => listener.OnCreate(activity, bundle));
 
             var cache = Mvx.Resolve<IMvxSingleViewModelCache>();
@@ -134,7 +134,7 @@ namespace MvvmCross.Platform.Android.Views
             return viewModel;
         }
 
-        private static void EnsureSetupInitialized(this IMvxAndroidView androidView)
+        private static void EnsureSetupInitialized(this IMvxAndroidView androidView, Func<global::Android.Content.Context, MvxAndroidSetup> setupCreator)
         {
             if (androidView is IMvxAndroidSplashScreenActivity)
             {
@@ -143,7 +143,7 @@ namespace MvvmCross.Platform.Android.Views
             }
 
             var activity = androidView.ToActivity();
-            var setupSingleton = MvxAndroidSetupSingleton.EnsureSingletonAvailable(activity.ApplicationContext);
+            var setupSingleton = MvxAndroidSetupSingleton.EnsureSingletonAvailable(setupCreator, activity.ApplicationContext);
             setupSingleton.EnsureInitialized();
         }
     }

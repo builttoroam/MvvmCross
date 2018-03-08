@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using Android.App;
+using Android.Content;
 using Android.Content.PM;
+using MvvmCross.Platform.Android.Core;
 using MvvmCross.Platform.Android.Views;
 
 namespace Playground.Droid
@@ -17,6 +19,11 @@ namespace Playground.Droid
         , ScreenOrientation = ScreenOrientation.Portrait)]
     public class SplashScreen : MvxSplashScreenActivity
     {
+        public override MvxAndroidSetup CreateSetup(Context applicationContext)
+        {
+            return new Setup(applicationContext);// MvxFormsAndroidSetup<Core.App, FormsApp>(applicationContext);
+        }
+
         public SplashScreen()
             : base(Resource.Layout.SplashScreen)
         {
