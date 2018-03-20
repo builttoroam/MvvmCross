@@ -134,7 +134,7 @@ namespace MvvmCross.Core
             InitializeNavigationSerializer();
             SetupLog.Trace("Setup: InpcInterception start");
             InitializeInpcInterception();
-            SetupLog.Trace("Setup: InpcInterception start");
+            SetupLog.Trace("Setup: ViewModelCache start");
             InitializeViewModelCache();
             SetupLog.Trace("Setup: LastChance start");
             InitializeLastChance();
