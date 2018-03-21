@@ -26,6 +26,8 @@
                 <Button Text="Show ListView" mvx:Bi.nd="Command ShowListViewCommand"/>
                 <Button Text="Show Bindings view" mvx:Bi.nd="Command ShowBindingsViewCommand"/>
                 <Button Text="Show CodeBehind view" mvx:Bi.nd="Command ShowCodeBehindViewCommand"/>
+                <Label Text="Notifications" />
+                <Button Text="Local Notification" mvx:Bi.nd="Command RaiseLocalNotificationCommand"/>
             </StackLayout>
         </ScrollView>
 	</ContentPage.Content>
