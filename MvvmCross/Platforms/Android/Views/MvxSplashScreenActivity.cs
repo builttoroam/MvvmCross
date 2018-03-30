@@ -85,5 +85,10 @@ namespace MvvmCross.Platforms.Android.Views
             if (!startup.IsStarted)
                 startup.Start();
         }
+
+        // do nothing on this override, as initial navigation is managed by TriggerFirstNavigate
+        protected override void RunAppStart(Bundle bundle)
+        {
+        }
     }
 }
