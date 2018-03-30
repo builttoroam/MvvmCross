@@ -16,18 +16,12 @@ namespace MvvmCross.Core
         private static readonly object LockObject = new object();
         private static TaskCompletionSource<bool> IsInitialisedTaskCompletionSource;
         private IMvxSetup _setup;
-        private bool _initialized;
         private IMvxSetupMonitor _currentMonitor;
 
-        protected virtual IMvxSetup Setup
-        {
-            get
-            {
-                return _setup;
-            }
-        }
+        protected virtual IMvxSetup Setup => _setup;
 
-        public virtual TMvxSetup PlatformSetup<TMvxSetup>() where TMvxSetup : IMvxSetup
+        public virtual TMvxSetup PlatformSetup<TMvxSetup>()
+            where TMvxSetup : IMvxSetup
         {
             try
             {
@@ -61,10 +55,10 @@ namespace MvvmCross.Core
         {
             lock (LockObject)
             {
-                if (_initialized)
-                    return;
                 if (IsInitialisedTaskCompletionSource != null)
                 {
+                    if (IsInitialisedTaskCompletionSource.Task.IsCompleted)
+                        return;
 
                     // Only wait for the result here if nobody's monitoring the state
                     if (_currentMonitor == null)
@@ -85,14 +79,17 @@ namespace MvvmCross.Core
             lock (LockObject)
             {
                 _currentMonitor = setupMonitor;
-                if (_initialized)
-                {
-                    _currentMonitor?.InitializationComplete();
-                    return;
-                }
-
+                
+                // if the tcs is not null, it means the initialization is running
                 if (IsInitialisedTaskCompletionSource != null)
                 {
+                    // If the task is already completed at this point, let the monitor know it has finished. 
+                    // but don't do it otherwise because it's done elsewhere
+                    if(IsInitialisedTaskCompletionSource.Task.IsCompleted)
+                    {
+                        _currentMonitor?.InitializationComplete();
+                    }
+
                     return;
                 }
                 
@@ -104,15 +101,12 @@ namespace MvvmCross.Core
         {
             lock (LockObject)
             {
-                if (setupMonitor == _currentMonitor)
+                if (setupMonitor != _currentMonitor)
                 {
-                    _currentMonitor = null;
+                    throw new MvxException("The specified IMvxSetupMonitor is not the one registered in MvxSetupSingleton");
                 }
+                _currentMonitor = null;
             }
-        }
-
-        protected MvxSetupSingleton()
-        {
         }
 
         protected virtual void CreateSetup()
