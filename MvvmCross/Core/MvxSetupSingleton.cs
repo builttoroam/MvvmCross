@@ -14,6 +14,7 @@ namespace MvvmCross.Core
        : MvxSingleton<MvxSetupSingleton>
     {
         private static readonly object LockObject = new object();
+        private static readonly object CompletionLockObject = new object();
         private static TaskCompletionSource<bool> IsInitialisedTaskCompletionSource;
         private IMvxSetup _setup;
         private IMvxSetupMonitor _currentMonitor;
@@ -53,53 +54,57 @@ namespace MvvmCross.Core
 
         public virtual void EnsureInitialized()
         {
-            lock (LockObject)
-            {
-                if (IsInitialisedTaskCompletionSource != null)
-                {
-                    if (IsInitialisedTaskCompletionSource.Task.IsCompleted)
-                        return;
+            // This method is safe to call multiple times - will only run init once
+            StartSetupInitialization();
 
-                    // Only wait for the result here if nobody's monitoring the state
-                    if (_currentMonitor == null)
-                    {
-                        IsInitialisedTaskCompletionSource.Task.GetAwaiter().GetResult();
-                        MvxLog.Instance.Trace("EnsureInitialized has already been called so now waiting for completion");
-                    }
-                }
-                else
-                {
-                    StartSetupInitialization();
-                }
-            }
+            // Return immediately if the task is completed
+            if (IsInitialisedTaskCompletionSource.Task.IsCompleted)
+                return;
+
+            // Block waiting on Initialize to be completed
+            IsInitialisedTaskCompletionSource.Task.GetAwaiter().GetResult();
         }
 
         public virtual void InitializeAndMonitor(IMvxSetupMonitor setupMonitor)
         {
-            lock (LockObject)
+            // Grab the lock for the setupMonitor to make sure
+            // InitializationComplete isn't attempted whilst we're 
+            // checking to see if Initialize has completed
+            lock (CompletionLockObject)
             {
-                _currentMonitor = setupMonitor;
-                
-                // if the tcs is not null, it means the initialization is running
-                if (IsInitialisedTaskCompletionSource != null)
+                var hasCompleted = false;
+                // Grab the lock for setting the completion state after Initialize is complete
+                lock (LockObject)
                 {
-                    // If the task is already completed at this point, let the monitor know it has finished. 
-                    // but don't do it otherwise because it's done elsewhere
-                    if(IsInitialisedTaskCompletionSource.Task.IsCompleted)
+                    hasCompleted = IsInitialisedTaskCompletionSource?.Task.IsCompleted ?? false;
+                    // At this point if the completion state isn't completed, we know
+                    // that we can set the _currentMonitor, and that InitializationComplete will get invoked
+                    if (!hasCompleted)
                     {
-                        _currentMonitor?.InitializationComplete();
+                        _currentMonitor = setupMonitor;
                     }
+                }
 
+                // At this point, if completion state is completed, we should
+                // NOT set the _currentMonitor (as there is a risk InitializationComplete
+                // has already been invoked). Instead we should just call InitializationComplete
+                // directly, and return.
+                if (hasCompleted)
+                {
+                    setupMonitor.InitializationComplete();
                     return;
                 }
-                
-                StartSetupInitialization();
             }
+
+            // If we get here, we should attempt to start Initialize because all we
+            // know is that Initialize hasn't completed. StartSetupInitialization is
+            // clever enough to know if it needs to run Initialize, or if it's already running
+            StartSetupInitialization();
         }
 
         public virtual void CancelMonitor(IMvxSetupMonitor setupMonitor)
         {
-            lock (LockObject)
+            lock (CompletionLockObject)
             {
                 if (setupMonitor != _currentMonitor)
                 {
@@ -125,7 +130,7 @@ namespace MvvmCross.Core
         {
             if (isDisposing)
             {
-                lock (LockObject)
+                lock (CompletionLockObject)
                 {
                     _currentMonitor = null;
                 }
@@ -135,23 +140,35 @@ namespace MvvmCross.Core
 
         private void StartSetupInitialization()
         {
-            IsInitialisedTaskCompletionSource = new TaskCompletionSource<bool>();
+            // Do double-test to detect if Initialize has started
+            if (IsInitialisedTaskCompletionSource != null) return;
+            lock (LockObject)
+            {
+                if (IsInitialisedTaskCompletionSource != null) return;
+
+                // At this point we know Initialize hasn't started, so create 
+                // the completion source and kick of Initialize
+                IsInitialisedTaskCompletionSource = new TaskCompletionSource<bool>();
+            }
+
+            // InitializePrimary should be only init methods that needs to be done on the UI thread
             _setup.InitializePrimary();
             Task.Run(() =>
             {
+                // InitializeSecondary should be the bulk of init methods (and done on non-UI thread)
                 _setup.InitializeSecondary();
                 lock (LockObject)
                 {
                     IsInitialisedTaskCompletionSource.SetResult(true);
-                    var dispatcher = Mvx.GetSingleton<IMvxMainThreadDispatcher>();
-                    dispatcher.RequestMainThreadAction(() =>
-                    {
-                        if (_currentMonitor != null)
-                        {
-                            _currentMonitor?.InitializationComplete();
-                        }
-                    });
                 }
+                var dispatcher = Mvx.GetSingleton<IMvxMainThreadDispatcher>();
+                dispatcher.RequestMainThreadAction(() =>
+                {
+                    lock (CompletionLockObject)
+                    {
+                        _currentMonitor?.InitializationComplete();
+                    }
+                });
             });
         }
     }
